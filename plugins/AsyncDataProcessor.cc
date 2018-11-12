@@ -90,6 +90,7 @@ bool AsyncDataProcessor::ProcessEvent(H4Tree& event, map<string, PluginBase*>& p
         {
             h4Tree_->GetTTreePtr()->Delete();            
             delete h4Tree_;
+            h4Tree_ = NULL;
         }
         if(asyncDataFile_ && asyncDataFile_->IsOpen())
             asyncDataFile_->Close();
@@ -105,7 +106,9 @@ bool AsyncDataProcessor::ProcessEvent(H4Tree& event, map<string, PluginBase*>& p
         asyncDataFile_ = TFile::Open((opts.GetOpt<string>(instanceName_+".srcPath")+"/"+
                                       to_string(event.runNumber)+"/"+
                                       formatted_spill_number+".root").c_str(), "READ");
-        h4Tree_ = new H4Tree((TTree*)asyncDataFile_->Get("H4tree"));
+
+        if(asyncDataFile_ && asyncDataFile_->IsOpen()){
+            h4Tree_ = new H4Tree((TTree*)asyncDataFile_->Get("H4tree"));
 
         //---Initialize TTreeFormula
         //   The TTreeFormula specified by 'asyncEventSelection' is used
@@ -116,6 +119,7 @@ bool AsyncDataProcessor::ProcessEvent(H4Tree& event, map<string, PluginBase*>& p
         auto selection = opts.OptExist(instanceName_+".asyncEventSelection") ?
             opts.GetOpt<string>(instanceName_+".asyncEventSelection") : "1";
         dataSelector_ = new TTreeFormula((instanceName_+"_selector").c_str(), selection.c_str(), event.GetTTreePtr());
+        }
     }
 
     //---Event loop. Match RC event with asynchronous DR events
@@ -126,7 +130,7 @@ bool AsyncDataProcessor::ProcessEvent(H4Tree& event, map<string, PluginBase*>& p
         status &= plugin->Clear(); //clearing for every event!
     }
 
-    if(opts.OptExist(instanceName_+".asyncEventSelection") && dataSelector_->EvalInstance())
+    if(h4Tree_ && opts.OptExist(instanceName_+".asyncEventSelection") && dataSelector_->EvalInstance())
     {
         int retries=0;
         while(h4Tree_->NextEntry())
