@@ -57,6 +57,8 @@ if __name__ == '__main__':
     """
     Run template generation
     """
+    ROOT.gSystem.Load("./CfgManager/lib/libCFGMan.so")
+    ROOT.gSystem.Load("./lib/libH4Analysis.so")
 
     parser = argparse.ArgumentParser (description = 'Run pulse shape template generation using DFT template plugin')
     parser.add_argument('-r', '--runs' , action=customAction, help='run to be processed, either list or file')
@@ -73,8 +75,12 @@ if __name__ == '__main__':
     parser.add_argument('--dftt-instance', dest='dftt_instance', default='DFTTmpl', help='Instance name of the DFTTemplate plugin')
     parser.add_argument('--wfr-instance', dest='wfr_instance', default='WFRecoFFT', help='Instance name of the WFReco plugin')
     parser.add_argument('--debug' , action="store_true", default=False, help='print debug messages')    
+    parser.add_argument('--batch' , action="store_true" , default=False, help='Run in batch mode without graphics')
     
     args = parser.parse_args ()
+
+    if args.batch == True:
+        ROOT.gROOT.SetBatch(ROOT.kTRUE)  
 
     cfg = ROOT.CfgManager(args.template_cfg)    
 
@@ -107,6 +113,7 @@ if __name__ == '__main__':
         print('>>> Building the template for ', ch, '...')
         reco_file = ROOT.TFile.Open(args.input_file)
         reco_tree = reco_file.Get("h4")
+
 
         tmpl_file = ROOT.TFile.Open(args.output, 'UPDATE')
         tmpl_file.Delete('tmpl_'+ch+';*')

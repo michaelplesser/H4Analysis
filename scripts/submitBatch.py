@@ -39,8 +39,9 @@ def htcondorSubmitJob (runs, path, cfg, outdir, queue, job_dir, dryrun):
     fsh.write ('declare -a runs=('+' '.join([str(run) for run in runs])+')\n\n')
     fsh.write ('cp '+jobtar+' ./ \n')
     fsh.write ('tar -xf job.tar \n')
+    fsh.write ('make clean \n')
     fsh.write ('source scripts/setup.sh \n')
-    fsh.write ('make -j 2 \n')
+    fsh.write ('make -j \n')
     fsh.write ('cp '+path+'/'+cfg+' job.cfg \n\n')
     fsh.write ('bin/H4Reco job.cfg ${runs[${1}]}\n\n')
     fsh.write ('cp ntuples/*${runs[${1}]}.root '+outdir+'\n')
@@ -104,7 +105,7 @@ if __name__ == '__main__':
     args = parser.parse_args ()
 
     ## check ntuple version
-    stageOutDir = args.storage+'ntuples_'+args.version+'/'
+    stageOutDir = args.storage+args.version+'/'
     
     if args.batch == 'lxbatch':
         if getoutput('ls '+stageOutDir) == "":
